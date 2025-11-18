@@ -139,14 +139,6 @@ class Settings(BaseSettings):
     CORS_ALLOW_METHODS: str = "*"
     CORS_ALLOW_HEADERS: str = "*"
 
-    @field_validator("CORS_ORIGINS", mode="before")
-    @classmethod
-    def parse_cors_origins(cls, v: str) -> List[str]:
-        """解析CORS origins"""
-        if isinstance(v, str):
-            return [origin.strip() for origin in v.split(",")]
-        return v
-
     # ==========================================
     # 日志配置
     # ==========================================
