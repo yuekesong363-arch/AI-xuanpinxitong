@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI选品系统 - TikTok美国站</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+        }
+
+        .main-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .tab {
+            padding: 15px 30px;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 16px;
+            color: #666;
+            border-bottom: 3px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .tab.active {
+            color: #667eea;
+            border-bottom-color: #667eea;
+            font-weight: 600;
+        }
+
+        .tab:hover {
+            color: #667eea;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .input-group input,
+        .input-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .input-group input:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .input-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .btn {
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #667eea;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .result-card {
+            margin-top: 30px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 12px;
+        }
+
+        .score-display {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .score-circle {
+            width: 150px;
+            height: 150px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            font-weight: bold;
+            color: white;
+        }
+
+        .grade-S { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .grade-A { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+        .grade-B { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+        .grade-C { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+        .grade-D { background: linear-gradient(135deg, #a8a8a8 0%, #666666 100%); }
+
+        .dimensions-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .dimension-card {
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            border-left: 4px solid #667eea;
+        }
+
+        .dimension-card h4 {
+            color: #667eea;
+            margin-bottom: 5px;
+        }
+
+        .dimension-card .score {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .profit-display {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .profit-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .profit-row:last-child {
+            border-bottom: none;
+            font-weight: bold;
+            font-size: 18px;
+            color: #667eea;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .status-success {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-warning {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .status-info {
+            background: #d1ecf1;
+            color: #0c5460;
+        }
+
+        .config-status {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+
+        .config-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 0;
+        }
+
+        .hint {
+            font-size: 14px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🚀 AI选品系统</h1>
+            <p>TikTok美国站 · 数据驱动 · 智能分析</p>
+        </div>
+
+        <div class="main-card">
+            <div class="tabs">
+                <button class="tab active" onclick="switchTab('analyze')">产品分析</button>
+                <button class="tab" onclick="switchTab('batch')">批量评分</button>
+                <button class="tab" onclick="switchTab('config')">系统配置</button>
+            </div>
+
+            <!-- 产品分析标签页 -->
+            <div id="analyze-tab" class="tab-content active">
+                <h2>产品分析</h2>
+                <p class="hint">输入产品信息，获取完整的分析报告和评分</p>
+
+                <div class="input-group">
+                    <label>产品名称（英文）*</label>
+                    <input type="text" id="product-name" placeholder="例如: Car Phone Holder" required>
+                </div>
+
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>预期售价 (USD)</label>
+                        <input type="number" id="selling-price" placeholder="24.99" step="0.01">
+                    </div>
+                    <div class="input-group">
+                        <label>采购价 (CNY)</label>
+                        <input type="number" id="purchase-price" placeholder="20" step="0.01">
+                    </div>
+                </div>
+
+                <div class="input-row">
+                    <div class="input-group">
+                        <label>重量 (kg)</label>
+                        <input type="number" id="weight" placeholder="0.3" step="0.01">
+                    </div>
+                    <div class="input-group">
+                        <label>尺寸 (长×宽×高 cm)</label>
+                        <input type="text" id="dimensions" placeholder="20 x 15 x 10">
+                    </div>
+                </div>
+
+                <button class="btn btn-primary" onclick="analyzeProduct()">
+                    开始分析
+                </button>
+
+                <div id="analyze-result"></div>
+            </div>
+
+            <!-- 批量评分标签页 -->
+            <div id="batch-tab" class="tab-content">
+                <h2>批量评分</h2>
+                <p class="hint">一次分析多个产品，快速筛选潜力产品</p>
+
+                <div class="input-group">
+                    <label>产品列表（每行一个产品名称，最多20个）</label>
+                    <textarea id="batch-products" rows="8" placeholder="Car Phone Holder
+Desk Organizer
+LED Strip Light
+Pet Grooming Tool"></textarea>
+                </div>
+
+                <button class="btn btn-primary" onclick="batchAnalyze()">
+                    批量分析
+                </button>
+
+                <div id="batch-result"></div>
+            </div>
+
+            <!-- 系统配置标签页 -->
+            <div id="config-tab" class="tab-content">
+                <h2>系统配置</h2>
+
+                <div class="config-status" id="config-status">
+                    <h3>当前配置状态</h3>
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>加载中...</p>
+                    </div>
+                </div>
+
+                <h3>配置 API Keys</h3>
+                <p class="hint">配置后可以使用真实AI分析，否则使用Mock数据</p>
+
+                <div class="input-group">
+                    <label>OpenAI API Key</label>
+                    <input type="password" id="openai-key" placeholder="sk-proj-...">
+                    <p class="hint">可选，配置后启用真实AI分析</p>
+                </div>
+
+                <button class="btn btn-primary" onclick="saveConfig()">
+                    保存配置
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:8000/api/v1';
+
+        // 页面加载时获取配置状态
+        window.onload = () => {
+            getConfigStatus();
+        };
+
+        // 切换标签
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+
+            event.target.classList.add('active');
+            document.getElementById(`${tab}-tab`).classList.add('active');
+
+            if (tab === 'config') {
+                getConfigStatus();
+            }
+        }
+
+        // 获取配置状态
+        async function getConfigStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/config/status`);
+                const result = await response.json();
+
+                if (result.success) {
+                    const status = result.data;
+                    document.getElementById('config-status').innerHTML = `
+                        <h3>当前配置状态</h3>
+                        <div class="config-item">
+                            <span>OpenAI API</span>
+                            <span class="status-badge ${status.openai_configured ? 'status-success' : 'status-warning'}">
+                                ${status.openai_configured ? '已配置 ✓' : '未配置'}
+                            </span>
+                        </div>
+                        <div class="config-item">
+                            <span>AI分析</span>
+                            <span class="status-badge ${status.can_use_ai ? 'status-success' : 'status-info'}">
+                                ${status.can_use_ai ? '已启用 ✓' : '使用Mock数据'}
+                            </span>
+                        </div>
+                        <div class="config-item">
+                            <span>数据模式</span>
+                            <span class="status-badge status-info">
+                                ${status.using_mock ? 'Mock模式' : '真实模式'}
+                            </span>
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('config-status').innerHTML = `
+                    <div style="color: red;">无法连接到后端服务，请确保后端正在运行</div>
+                `;
+            }
+        }
+
+        // 保存配置
+        async function saveConfig() {
+            const openaiKey = document.getElementById('openai-key').value;
+
+            if (!openaiKey) {
+                alert('请输入OpenAI API Key');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/config/api-keys`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({openai_api_key: openaiKey})
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    alert('配置保存成功！');
+                    getConfigStatus();
+                }
+            } catch (error) {
+                alert('保存失败: ' + error.message);
+            }
+        }
+
+        // 分析产品
+        async function analyzeProduct() {
+            const productName = document.getElementById('product-name').value;
+            if (!productName) {
+                alert('请输入产品名称');
+                return;
+            }
+
+            const sellingPrice = document.getElementById('selling-price').value;
+            const purchasePrice = document.getElementById('purchase-price').value;
+            const weight = document.getElementById('weight').value;
+            const dimensionsStr = document.getElementById('dimensions').value;
+
+            let dimensions = null;
+            if (dimensionsStr) {
+                const parts = dimensionsStr.split('x').map(p => parseFloat(p.trim()));
+                if (parts.length === 3) {
+                    dimensions = {length: parts[0], width: parts[1], height: parts[2]};
+                }
+            }
+
+            const payload = {
+                product_name: productName,
+                selling_price: sellingPrice ? parseFloat(sellingPrice) : null,
+                purchase_price_cny: purchasePrice ? parseFloat(purchasePrice) : null,
+                weight_kg: weight ? parseFloat(weight) : null,
+                dimensions: dimensions
+            };
+
+            showLoading('analyze-result');
+
+            try {
+                const response = await fetch(`${API_BASE}/products/analyze`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    displayAnalysisResult(result.data);
+                } else {
+                    document.getElementById('analyze-result').innerHTML = `
+                        <div class="result-card" style="color: red;">分析失败: ${result.error}</div>
+                    `;
+                }
+            } catch (error) {
+                document.getElementById('analyze-result').innerHTML = `
+                    <div class="result-card" style="color: red;">
+                        请求失败，请确保后端服务正在运行<br>
+                        错误: ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        // 显示加载状态
+        function showLoading(elementId) {
+            document.getElementById(elementId).innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p>正在分析中，请稍候...</p>
+                </div>
+            `;
+        }
+
+        // 显示分析结果
+        function displayAnalysisResult(data) {
+            const scoring = data.scoring;
+            const profit = data.profit_detail;
+
+            let html = `
+                <div class="result-card">
+                    <div class="score-display">
+                        <div class="score-circle grade-${scoring.grade}">
+                            ${scoring.total_score}
+                        </div>
+                        <h2>${scoring.grade}级产品</h2>
+                        <p>${scoring.recommendation.message}</p>
+                    </div>
+
+                    <h3>各维度评分</h3>
+                    <div class="dimensions-grid">
+                        ${Object.entries(scoring.scores).map(([key, value]) => `
+                            <div class="dimension-card">
+                                <h4>${getDimensionName(key)}</h4>
+                                <div class="score">${value.score}分</div>
+                            </div>
+                        `).join('')}
+                    </div>
+
+                    <h3>利润分析</h3>
+                    <div class="profit-display">
+                        <div class="profit-row">
+                            <span>售价</span>
+                            <span>$${profit.selling_price}</span>
+                        </div>
+                        <div class="profit-row">
+                            <span>采购成本</span>
+                            <span>$${profit.costs.purchase_cost}</span>
+                        </div>
+                        <div class="profit-row">
+                            <span>物流成本</span>
+                            <span>$${profit.costs.shipping_cost}</span>
+                        </div>
+                        <div class="profit-row">
+                            <span>平台费用</span>
+                            <span>$${profit.costs.platform_fee}</span>
+                        </div>
+                        <div class="profit-row">
+                            <span>广告成本</span>
+                            <span>$${profit.costs.ad_cost}</span>
+                        </div>
+                        <div class="profit-row">
+                            <span>总成本</span>
+                            <span>$${profit.costs.total_cost}</span>
+                        </div>
+                        <div class="profit-row">
+                            <span>净利润</span>
+                            <span>$${profit.profit} (${profit.profit_margin_percentage}%)</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            document.getElementById('analyze-result').innerHTML = html;
+        }
+
+        // 批量分析
+        async function batchAnalyze() {
+            const text = document.getElementById('batch-products').value;
+            const products = text.split('\n').filter(p => p.trim()).slice(0, 20);
+
+            if (products.length === 0) {
+                alert('请输入至少一个产品名称');
+                return;
+            }
+
+            showLoading('batch-result');
+
+            try {
+                const response = await fetch(`${API_BASE}/products/batch-analyze`, {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({product_names: products})
+                });
+
+                const result = await response.json();
+                if (result.success) {
+                    displayBatchResult(result.data.products);
+                }
+            } catch (error) {
+                document.getElementById('batch-result').innerHTML = `
+                    <div class="result-card" style="color: red;">请求失败: ${error.message}</div>
+                `;
+            }
+        }
+
+        // 显示批量结果
+        function displayBatchResult(products) {
+            let html = `
+                <div class="result-card">
+                    <h3>分析结果（共${products.length}个产品，按分数排序）</h3>
+                    <table style="width: 100%; margin-top: 20px; border-collapse: collapse;">
+                        <thead>
+                            <tr style="background: #f0f0f0;">
+                                <th style="padding: 10px; text-align: left;">排名</th>
+                                <th style="padding: 10px; text-align: left;">产品名称</th>
+                                <th style="padding: 10px; text-align: center;">总分</th>
+                                <th style="padding: 10px; text-align: center;">等级</th>
+                                <th style="padding: 10px; text-align: left;">建议</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${products.map((p, index) => `
+                                <tr style="border-bottom: 1px solid #e0e0e0;">
+                                    <td style="padding: 10px;">${index + 1}</td>
+                                    <td style="padding: 10px;">${p.product_name}</td>
+                                    <td style="padding: 10px; text-align: center; font-weight: bold;">${p.total_score}</td>
+                                    <td style="padding: 10px; text-align: center;">
+                                        <span class="status-badge ${getGradeClass(p.grade)}">${p.grade}</span>
+                                    </td>
+                                    <td style="padding: 10px;">${p.recommendation.message}</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            document.getElementById('batch-result').innerHTML = html;
+        }
+
+        // 获取维度名称
+        function getDimensionName(key) {
+            const names = {
+                market_demand: '市场需求',
+                functional_value: '功能价值',
+                emotional_value: '情绪价值',
+                content_value: '内容价值',
+                pleasure_pain: '爽点/痛点',
+                us_market_fit: '美国适配',
+                size_logistics: '尺寸物流',
+                competition: '竞争强度',
+                supply_pricing: '供应链定价'
+            };
+            return names[key] || key;
+        }
+
+        // 获取等级样式类
+        function getGradeClass(grade) {
+            const classes = {
+                'S': 'status-success',
+                'A': 'status-success',
+                'B': 'status-info',
+                'C': 'status-warning',
+                'D': 'status-warning'
+            };
+            return classes[grade] || 'status-info';
+        }
+    </script>
+</body>
+</html>

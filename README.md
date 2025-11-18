@@ -154,54 +154,108 @@ AI-xuanpinxitong/
 
 ---
 
-## 🚀 快速开始
+## 🚀 快速开始（本地运行）
 
-### 前置要求
-- Python 3.11+
-- Node.js 18+
-- PostgreSQL 15+
-- Redis 7+
-- Docker & Docker Compose (可选)
+> **推荐**: 使用VS Code打开项目进行开发
 
-### 安装
+### 📥 方式1：本地VS Code开发（推荐，5分钟上手）
 
-#### 1. 克隆仓库
+**适合**: 想在本地开发和使用的用户
+
+#### 第1步：克隆项目到本地
 ```bash
 git clone https://github.com/yourusername/AI-xuanpinxitong.git
 cd AI-xuanpinxitong
 ```
 
-#### 2. 后端设置
+#### 第2步：使用VS Code打开
+```bash
+# 在项目目录下打开VS Code
+code .
+```
+
+#### 第3步：安装Python依赖
+在VS Code终端中 (`` Ctrl+` ``):
 ```bash
 cd backend
-python -m venv venv
-source venv/bin/activate  # Windows: venv\Scripts\activate
 pip install -r requirements.txt
-
-# 配置环境变量
-cp .env.example .env
-# 编辑 .env 文件，填入必要的API密钥
-
-# 初始化数据库
-python scripts/init_db.py
-
-# 运行后端
-python main.py
 ```
 
-#### 3. 前端设置
+💡 **推荐使用虚拟环境**:
 ```bash
-cd frontend
-npm install
-npm run dev
+# Windows
+python -m venv venv
+venv\Scripts\activate
+
+# macOS/Linux
+python3 -m venv venv
+source venv/bin/activate
+
+# 然后安装依赖
+pip install -r requirements.txt
 ```
 
-#### 4. 使用Docker (推荐)
+#### 第4步：启动后端
 ```bash
+cd backend
+python -m uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+看到以下输出即表示成功：
+```
+✅ INFO:     Uvicorn running on http://0.0.0.0:8000
+✅ INFO:     Application startup complete.
+```
+
+#### 第5步：打开前端界面
+在VS Code中找到 `frontend/index.html` 文件，右键选择 "Open with Live Server"
+
+**或者**直接双击 `frontend/index.html` 用浏览器打开
+
+#### 第6步：开始使用！
+1. 在浏览器中会自动打开界面
+2. 点击"产品分析"标签
+3. 输入产品名称，如 "Car Phone Holder"
+4. 点击"开始分析"
+5. 2-5秒后查看完整分析报告！
+
+✅ **无需配置API Key** - 系统默认使用Mock数据，全部功能都可以正常使用！
+
+📖 **详细VS Code使用指南**: [docs/VS_CODE_SETUP.md](docs/VS_CODE_SETUP.md)
+
+---
+
+### 📦 方式2：Docker一键启动
+
+**适合**: 想快速体验完整系统的用户
+
+```bash
+# 1. 克隆项目
+git clone https://github.com/yourusername/AI-xuanpinxitong.git
+cd AI-xuanpinxitong
+
+# 2. 一键启动所有服务
 docker-compose up -d
+
+# 3. 访问
+# API文档: http://localhost:8000/docs
+# 前端界面: http://localhost:3000
 ```
 
-访问 `http://localhost:3000` 查看应用
+---
+
+### 前置要求
+
+**最小要求** (方式1 - VS Code本地开发):
+- ✅ Python 3.11+ - [下载](https://www.python.org/downloads/)
+- ✅ VS Code - [下载](https://code.visualstudio.com/)
+- ✅ 浏览器（Chrome/Edge/Firefox）
+
+**完整要求** (方式2 - Docker部署):
+- ✅ Docker & Docker Compose - [下载](https://www.docker.com/)
+- ⚠️ PostgreSQL 15+ (可选，Mock模式不需要)
+- ⚠️ Redis 7+ (可选，Mock模式不需要)
+- ⚠️ Node.js 18+ (可选，已有HTML前端)
 
 ---
 
